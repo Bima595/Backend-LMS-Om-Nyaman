@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_URL")
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String  @map("user_id")
+  type               String
+  provider           String
+  providerAccountId  String  @map("provider_account_id")
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state      String?
+ 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+ 
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  @@map("sessions")
+}
+ 
+model User {
+  id            String       @id @default(cuid())
+  name          String?
+  email         String?      @unique
+  emailVerified DateTime?    @map("email_verified")
+  image         String?
+  password      String?
+  role          String       @default("user")
+  accounts      Account[]
+  sessions      Session[]
+  tugas         Tugas[]
+  pengumpulan   Pengumpulan[]
+  userClasses   UserClass[]  
+
+  @@map("users")
+}
+ 
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+ 
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model Artikel{
+  id String @id @default(cuid())
+  judul String
+  tanggal DateTime
+  body String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Class {
+  id          String        @id @default(cuid())
+  nama        String
+  deskripsi   String?
+  hari        String[]     
+  jamKelas    String[]    
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  tugas       Tugas[]       @relation("ClassTugas")
+  pengumpulan Pengumpulan[] @relation("ClassPengumpulan")
+  userClasses UserClass[]
+  @@map("classes")
+}
+
+
+model UserClass {
+  id        String @id @default(cuid())
+  userId    String
+  classId   String
+  isJoined  Boolean @default(true)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class  Class  @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, classId])
+  @@map("user_classes")
+}
+
+model Tugas {
+  id          String    @id @default(cuid())
+  judul       String
+  deskripsi   String
+  fileUrl     String?
+  startDate   DateTime
+  deadline    DateTime
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classId     String
+  class       Class      @relation(fields: [classId], references: [id], onDelete: Cascade, name: "ClassTugas")
+  pengumpulan Pengumpulan[]
+
+  @@map("tugas")
+}
+
+model Pengumpulan {
+  id           String    @id @default(cuid())
+  fileUrl      String
+  status       String    @default("ontime") // "ontime" or "late"
+  submittedAt  DateTime  @default(now())
+  tugasId      String
+  userId       String
+  tugas        Tugas     @relation(fields: [tugasId], references: [id], onDelete: Cascade)
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classId      String
+  class        Class     @relation(fields: [classId], references: [id], onDelete: Cascade, name: "ClassPengumpulan")
+
+  @@map("pengumpulan")
+}
+
