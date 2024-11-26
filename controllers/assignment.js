@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
+//mengambil semua tugas
 export const getTugas = async (req, res) => {
   try {
     const response = await prisma.tugas.findMany();
@@ -10,6 +11,8 @@ export const getTugas = async (req, res) => {
   }
 };
 
+
+//mengambil tugas by id 
 export const getNewsById = async (req, res) => {
   try {
     const response = await prisma.tugas.findUnique({
@@ -23,10 +26,9 @@ export const getNewsById = async (req, res) => {
   }
 };
 
+//membuat tugas
 export const createTugas = async (req, res) => {
     try {
-      console.log(req.file); // Log data file
-  
       // Extract variables from req.body
       const { judul, deskripsi, startDate, deadline, classId } = req.body;
   
